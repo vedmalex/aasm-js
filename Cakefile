@@ -21,8 +21,16 @@ task 'test', 'Test the app', (options) ->
   
   isVerbose = options.verbose
   showColors = true
+  teamcity = false
+  useRequireJs = false
   extentions = 'js|coffee'
-  
+
+  junitreport =  
+    report: false,
+    savePath : "./reports/",
+    useDotNotation: true,
+    consolidate: true
+
   
   jasmine.loadHelpersInFolder(specFolder, new RegExp("[-_]helper\.(js|coffee)$"))
   jasmine.executeSpecsInFolder specFolder, (runner, log) ->
@@ -31,7 +39,7 @@ task 'test', 'Test the app', (options) ->
       process.exit(0);
     else
       process.exit(1);
-  , isVerbose, showColors, new RegExp(".spec\\.(" + extentions + ")$", 'i')
+  , isVerbose, showColors, teamcity, useRequireJs ,new RegExp(".spec\\.(" + extentions + ")$", 'i'), junitreport
 
   # invoke 'build'
   # args = [
