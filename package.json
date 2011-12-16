@@ -2,8 +2,8 @@
   "name":         "aasm-js",
   "description":  "CoffeeScript state machines",
   "keywords":     ["state-machine", "statemachine", "aasm"],
-  "author":       "Chandra Patni",
-  "version":      "1.0.0",
+  "author":       "Chandra Patni,Vedanta-krit dasa",
+  "version":      "1.0.1",
   "licenses":     [{
     "type":       "MIT",
     "url":        "http://github.com/rubyorchard/aasm-js/raw/master/LICENSE"
@@ -21,7 +21,7 @@
     "url": "git://github.com/rubyorchard/aasm-js.git"
   },
   "devDependencies": {
-    "coffee-script":  "1.1.2",
+    "coffee-script":  "1.1.3",
     "jasmine-node":   "1.0.6"
   },
   "scripts": {
