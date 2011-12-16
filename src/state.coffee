@@ -12,10 +12,24 @@ module.exports = class State
   # beforeExit
   # exit
   # afterExit
+  # onError
 
   constructor: (name, options = {}) ->
     @name = name
+    @onError = del options, 'onError'
     @update(options)
+  
+  handleError: (record, error)->
+    if not (error is "halt_aasm_chain")
+      if @onError?
+        switch typeof @onError
+          when 'string'
+            record[@onError].call(record, error)
+          when 'function'
+            @onError.call(@onError, record, error)
+      else 
+        throw error
+
   # равенство определяется равенством имён
   equals: (state) ->
     @this.name is state
@@ -28,15 +42,16 @@ module.exports = class State
   # exit
   # afterExit
 
-  callAction: (action, record) ->
+  callAction: (action, record, args...) ->
     action = @options[action]
-    if Array.isArray action
-      try
-        _callAction(anAction, record) for anAction in action
-      catch HaltAasmChain
-        #ignore
-    else
-      _callAction(action, record)
+    try
+      if Array.isArray action
+        @_callAction(anAction, record) for anAction in action
+      else
+        @_callAction(action, record)
+    catch error
+      @handleError(record, error)
+
   # пары значений для выбора из списка
   forSelect: () -> [@displayName, @name]
   # установить значения опций для состояния
@@ -45,12 +60,13 @@ module.exports = class State
       @displayName = del options, 'display'
     else
       @displayName = capitalize(@name.replace(/_/g, ' '))
+
     @options = options
     this
   # вызов метода
-  _callAction= (action, record)->
+  _callAction: (action, record, args...)->
     switch typeof action
       when 'string'
-        record[action].call(record)
+        record[action].call(record, args...)
       when 'function'
-        action.call(action, record)
+        action.call(action, record, args...)

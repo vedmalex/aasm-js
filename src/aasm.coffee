@@ -4,20 +4,22 @@ Event = require './event'
 module.exports = class AASM
 
   ClassMethods =
+
+    # setter/getter for initialState
     aasmInitialState: (initialState) ->
       #this refers to the class object here which is mixing in this module
       if initialState
         StateMachine[this].initialState = initialState
       else
         StateMachine[this].initialState
-
+    # создает заданное состояние с опциями
     aasmState: (name, options={}) ->
       sm = StateMachine[this]
       sm.createState(name, options)
       sm.initialState = name unless sm.initialState
       isMethod = "is#{name.substr(0,1).toUpperCase()}#{name.substr(1)}"
       this.prototype[isMethod] = () ->  @aasmCurrentState() is name
-
+    # создает event 
     aasmEvent: (name, options = {}, block) ->
       if typeof options is 'function'
         block = options
@@ -100,7 +102,6 @@ module.exports = class AASM
       obj = @constructor.aasmStates().filter (s) -> s.name is name
       throw {name: "UndefinedState", message: "State :#{name} doesn't exist"} unless obj
       obj[0]
-
 
     aasmFireEvent: (name, persist, args...) ->
       event = @constructor.aasmEvents()[name]
