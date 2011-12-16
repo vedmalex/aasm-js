@@ -1,5 +1,6 @@
 StateTransition = require '../lib/state_transition'
 
+
 describe 'StateTransition', ->
   it 'should set from, to, and opts attr readers', ->
     opts = {from: 'foo', to: 'bar', guard: 'g'}
@@ -28,7 +29,6 @@ describe 'StateTransition', ->
       st = new StateTransition(opts)
       expect(st.perform(null)).toBeTruthy()
 
-
     it 'should call the method on the object if guard is a string', ->
       opts = {from: 'foo', to: 'bar', guard: 'test'}
       st = new StateTransition(opts)
@@ -43,4 +43,61 @@ describe 'StateTransition', ->
       obj = test: ->
       spyOn(obj, 'test')
       st.perform(obj)
-      expect(obj.test).toHaveBeenCalled()
+      expect(obj.test).toHaveBeenCalled() 
+
+  describe 'Error handling', ->
+
+    it 'should execute each method is listed in onTransition',->
+      opts = {from: 'foo', to: 'bar', onTransition: ["test","a"] }
+      st = new StateTransition(opts)
+      obj =
+        test: -> 
+        a: -> 
+      spyOn(obj, 'test')
+      spyOn(obj, 'a')
+      st.execute(obj)
+      expect(obj.test).toHaveBeenCalled() 
+      expect(obj.a).toHaveBeenCalled() 
+
+    it 'should throw error if no handler is specified',->
+      opts = {from: 'foo', to: 'bar', onTransition: ["test","a"] }
+      st = new StateTransition(opts)
+      obj =
+        test: -> 
+        a: ->
+      spyOn(obj, 'test').andThrow("some")
+      spyOn(obj, 'a')
+      expect(-> st.execute(obj)).toThrow("some")
+      expect(obj.test).toHaveBeenCalled() 
+      expect(obj.a).not.toHaveBeenCalled() 
+
+    it 'should call errorHandler if it is specified as string',->
+      opts = {from: 'foo', to: 'bar', onTransition: ["test","a"], onError:'error' }
+      st = new StateTransition(opts)
+      obj =
+        test: -> 
+        a: ->
+        error: ->
+      spyOn(obj, 'test').andThrow("some")
+      spyOn(obj, 'a')
+      spyOn(obj, 'error')
+      expect(-> st.execute(obj)).not.toThrow("some")
+      expect(obj.test).toHaveBeenCalled() 
+      expect(obj.a).not.toHaveBeenCalled()
+      expect(obj.error).toHaveBeenCalled()  
+
+    it 'should call errorHandler if it is specified as method',->
+
+      opts = {from: 'foo', to: 'bar', onTransition: ["test","a"],onError:(obj,error)-> obj.error() }
+      st = new StateTransition(opts)
+      obj =
+        test: ->
+        a: ->
+        error: ->
+      spyOn(obj, 'test').andThrow("some")
+      spyOn(obj, 'a')
+      spyOn(obj, 'error')
+      expect(-> st.execute(obj)).not.toThrow("some")
+      expect(obj.test).toHaveBeenCalled() 
+      expect(obj.a).not.toHaveBeenCalled()
+      expect(obj.error).toHaveBeenCalled() 
