@@ -37,8 +37,8 @@ class Baz extends Bar
 
 class Banker
   AASM.include(this)
-  @aasmInitialState  (banker) ->
-    if banker.isRich() then 'retired' else 'sellingBadMortgages'
+  @aasmInitialState  () ->
+    if @isRich() then 'retired' else 'sellingBadMortgages'
 
   @aasmState 'retired'
   @aasmState 'sellingBadMortgages'
@@ -356,7 +356,7 @@ class ChetanPatil
 
   @aasmEvent 'dress', ->
     @transitions from: 'sleeping',  to: 'working', onTransition: 'wearClothes'
-    @transitions from: 'showering', to: ['working', 'dating'], onTransition: (obj, args...) -> obj.wearClothes(args...)
+    @transitions from: 'showering', to: ['working', 'dating'], onTransition: (args...) -> @wearClothes(args...)
     @transitions from: 'showering', to: 'prettyingUp', onTransition: ['conditionHair', 'fixHair']
 
 

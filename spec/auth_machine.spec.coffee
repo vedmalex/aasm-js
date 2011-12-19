@@ -13,7 +13,7 @@ class AuthMachine
   @aasmState 'deleted', enter: 'doDelete', exit: 'doUndelete'
 
   @aasmEvent 'register', ->
-    @transitions from: 'passive', to: 'pending', guard: (u) -> u.canRegister()
+    @transitions from: 'passive', to: 'pending', guard: () -> @canRegister()
 
   @aasmEvent 'activate', ->
     @transitions from: 'pending', to: 'active'
@@ -25,8 +25,8 @@ class AuthMachine
     @transitions from: ['passive', 'pending', 'active', 'suspended'], to: 'deleted'
 
   @aasmEvent 'unsuspend', ->
-    @transitions from: 'suspended', to: 'active',  guard: (u) -> u.hasActivated()
-    @transitions from: 'suspended', to: 'pending', guard: (u) -> u.hasActivationCode()
+    @transitions from: 'suspended', to: 'active',  guard: () -> @hasActivated()
+    @transitions from: 'suspended', to: 'pending', guard: () -> @hasActivationCode()
     @transitions from: 'suspended', to: 'passive'
 
   constructor: () ->

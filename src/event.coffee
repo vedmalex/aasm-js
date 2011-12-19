@@ -1,5 +1,5 @@
 StateTransition = require './state_transition'
-{merge, flatten} = require './helpers'
+{merge, flatten, _callAction} = require './helpers'
 
 module.exports = class Event
   ### конструктор события
@@ -32,7 +32,7 @@ module.exports = class Event
   если парамент toState не задан, то будет осуществлен переход по первому из списка
   returns функция возвращает новое состояние
   ###
-  fire: (obj, toState = null, args...) ->
+  fire: (obj, toState, args...) ->
     aasmCurrentState = if typeof obj.aasmCurrentState is 'function'
       obj.aasmCurrentState()
     else
@@ -76,9 +76,9 @@ module.exports = class Event
   callAction: (action, record) ->
     action = @options[action]
     if Array.isArray action
-      @_callAction(anAction, record) for anAction in action
+      _callAction(anAction,record) for anAction in action
     else
-      @_callAction(action, record)
+      _callAction(action, record)
 
   equals: (event) ->
     @name is event.name
@@ -90,51 +90,21 @@ module.exports = class Event
     if options.error
       @error = options.error
     if block
-      block.call(this)
+      _callAction(block,this)
     @options = options
     this
 
   # выполнить код по успешному переходу
   executeSuccessCallback: (obj, success = null)->
     callback = success ? @success
-    switch typeof callback
-      when 'string'
-        obj[callback].call(obj)
-      when 'function'
-        try
-          callback.call(obj, obj)
-        catch error
-          console.log(error)
-      else
-        if Array.isArray(callback)
-          @executeSuccessCallback(obj, meth) for meth in callback
-        else
-          "Unknow type #{callback}"
+    _callAction(callback, obj)
 
   # выполнить код по аварийному переходу
   executeErrorCallback: (obj, error, errorCallback=null)->
     callback = errorCallback || @error
-    throw  error unless callback
-    switch typeof callback
-      when 'string'
-        unless obj[callback]
-          throw {name: "NoMethodError", message: "No such method #{callback}"}
-        obj[callback].call(obj, error)
-      when 'function'
-        callback.call(obj, error)
-      else
-        if Array.isArray(callback)
-          @executeErrorCallback(obj, error, meth) for meth in callback
-        else
-          "Unknow type #{callback}"
-
-  # выполнить код действия
-  _callAction: (action, record)->
-    switch typeof action
-      when 'string'
-        record[action].call(record)
-      when 'function'
-        action.call(record)
+    throw error unless callback
+    throw {name: "NoMethodError", message: "No such method #{callback}"} unless obj[callback]
+    _callAction(callback, obj, error)
 
   # одновременно и get-тер и set-тер для переходов
   transitions: (transOpts) ->
@@ -142,7 +112,7 @@ module.exports = class Event
     if transOpts?
       # массив?
       if Array.isArray(transOpts.from)
-        # Добавить из массива
+        # Добавить конфигурацию из массива
         for from in transOpts.from
           @_transitions.push(new StateTransition(merge(transOpts, {from: from})))
       else
@@ -151,4 +121,5 @@ module.exports = class Event
     else
       # вернуть все текущие переходы 
       @_transitions
+
 

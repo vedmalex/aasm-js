@@ -55,7 +55,7 @@ exports.del = (obj, key) ->
 # Gets the last item of an array(-like) object.
 exports.last = (array, back) -> array[array.length - (back or 0) - 1]
 
-'''
+###
 * @method capitalize()
 * @returns String
 * @short Capitalizes the first character in the string.
@@ -63,12 +63,11 @@ exports.last = (array, back) -> array[array.length - (back or 0) - 1]
 *
 *   'hello'.capitalize()              -> 'Hello'
 *   'why hello there...'.capitalize() -> 'Why hello there...'
-'''
-capitalize = exports.capitalize = (string) ->
-  string.substr(0,1).toUpperCase() + string.substr(1).toLowerCase()
+###
+capitalize = exports.capitalize = (str) ->
+  str.substr(0,1).toUpperCase() + str.substr(1).toLowerCase()
 
-"""
-/***
+###
  * @method dasherize()
  * @returns String
  * @short Converts underscores and camel casing to hypens.
@@ -77,14 +76,11 @@ capitalize = exports.capitalize = (string) ->
  *   'a_farewell_to_arms'.dasherize() -> 'a-farewell-to-arms'
  *   'capsLock'.dasherize()           -> 'caps-lock'
  *
- ***/
-
-"""
+###
 dasherize = exports.dasherize = (string) ->
   string.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/_/g, '-').toLowerCase()
 
-"""
-/***
+###
  * @method underscore()
  * @returns String
  * @short Converts hyphens and camel casing to underscores.
@@ -93,14 +89,12 @@ dasherize = exports.dasherize = (string) ->
  *   'a-farewell-to-arms'.underscore() -> 'a_farewell_to_arms'
  *   'capsLock'.underscore()           -> 'caps_lock'
  *
- ***/
-"""
+###
 
 exports.underscore = (string) ->
   string.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/-/g, '_').toLowerCase()
 
-"""
-/***
+###
  * @method camelize([first] = true)
  * @returns String
  * @short Converts underscores and hyphens to camel case. If [first] is true the first letter will also be capitalized.
@@ -110,9 +104,7 @@ exports.underscore = (string) ->
  *   'moz-border-radius'.camelize()      -> 'MozBorderRadius'
  *   'moz-border-radius'.camelize(false) -> 'mozBorderRadius'
  *
- ***/
-
-"""
+###
 exports.camelize = (string, first) ->
   parts = dasherize(string).split('-')
   text = for part, i in parts
@@ -122,8 +114,7 @@ exports.camelize = (string, first) ->
       part.substr(0, 1).toUpperCase() + part.substr(1).toLowerCase()
   text.join('')
 
-'''
-/***
+###
  * @method words([fn])
  * @returns Array
  * @short Runs callback [fn] against each word in the string. Returns an array of words.
@@ -134,17 +125,14 @@ exports.camelize = (string, first) ->
  *   'broken wear'.words(function(w) {
  *     // Called twice: "broken", "wear"
  *   });
- *
- ***/
-'''
+###
 
 words = exports.words = (string, fn) ->
   parts = string.trim().split(/\s+/)
   if fn? then parts.map(fn) else parts
 
 
-'''
-/***
+###
  * @method titleize()
  * @returns String
  * @short Capitalizes all first letters.
@@ -152,9 +140,27 @@ words = exports.words = (string, fn) ->
  *
  *   'what a title'.titleize() -> 'What A Title'
  *   'no way'.titleize()       -> 'No Way'
- *
- ***/
-'''
+###
 exports.titleize = (string) ->
   words(string, (s) -> capitalize(s)).join(' ')
 
+# выполнить код действия
+
+_callAction = (action, thisArg, args...)->
+  #throw "No Action Specified" unless action
+  if Array.isArray(action)
+    _callAction(anAction, thisArg, args...) for anAction in action
+  else
+    switch typeof action
+      when 'string'
+        debugger
+        if thisArg[action]?
+          thisArg[action].call(thisArg, args...)
+        else
+          "No such method #{action}"
+      when 'function'
+        action.call(thisArg, args...)
+      else
+        "Unknow type #{action}"
+
+exports._callAction = _callAction

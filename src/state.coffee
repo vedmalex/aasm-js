@@ -1,4 +1,4 @@
-{starts, ends, compact, count, merge, extend, flatten, del, last, capitalize} = require './helpers'
+{starts, ends, compact, count, merge, extend, flatten, del, last, capitalize, _callAction} = require './helpers'
 # тип состояние
 module.exports = class State
   # конструктор параметры название и опции
@@ -21,14 +21,8 @@ module.exports = class State
   
   handleError: (record, error)->
     if not (error is "halt_aasm_chain")
-      if @onError?
-        switch typeof @onError
-          when 'string'
-            record[@onError].call(record, error)
-          when 'function'
-            @onError.call(@onError, record, error)
-      else 
-        throw error
+      throw error unless @onError?
+      _callAction(@onError, record, error)
 
   # равенство определяется равенством имён
   equals: (state) ->
@@ -41,14 +35,9 @@ module.exports = class State
   # beforeExit
   # exit
   # afterExit
-
   callAction: (action, record, args...) ->
-    action = @options[action]
     try
-      if Array.isArray action
-        @_callAction(anAction, record) for anAction in action
-      else
-        @_callAction(action, record)
+      _callAction(@options[action], record, args...)
     catch error
       @handleError(record, error)
 
@@ -56,17 +45,10 @@ module.exports = class State
   forSelect: () -> [@displayName, @name]
   # установить значения опций для состояния
   update: (options = {}) ->
-    if options.display
-      @displayName = del options, 'display'
-    else
-      @displayName = capitalize(@name.replace(/_/g, ' '))
+    @displayName = if options.display 
+      del(options, 'display') 
+    else 
+      capitalize(@name.replace(/_/g, ' '))
 
     @options = options
     this
-  # вызов метода
-  _callAction: (action, record, args...)->
-    switch typeof action
-      when 'string'
-        record[action].call(record, args...)
-      when 'function'
-        action.call(action, record, args...)

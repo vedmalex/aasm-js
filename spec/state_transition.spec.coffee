@@ -38,7 +38,7 @@ describe 'StateTransition', ->
       expect(object.test).toHaveBeenCalled()
 
     it 'should call the proc passing the object if the guard is a function', ->
-      opts = {from: 'foo', to: 'bar', guard: (o) -> o.test() }
+      opts = {from: 'foo', to: 'bar', guard: () -> @test() }
       st = new StateTransition(opts)
       obj = test: ->
       spyOn(obj, 'test')
@@ -88,7 +88,7 @@ describe 'StateTransition', ->
 
     it 'should call errorHandler if it is specified as method',->
 
-      opts = {from: 'foo', to: 'bar', onTransition: ["test","a"],onError:(obj,error)-> obj.error() }
+      opts = {from: 'foo', to: 'bar', onTransition: ["test","a"],onError:()-> @error() }
       st = new StateTransition(opts)
       obj =
         test: ->

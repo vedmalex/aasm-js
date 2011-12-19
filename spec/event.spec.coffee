@@ -92,7 +92,7 @@ describe 'Event', ->
      expect(model.successCallback2).toHaveBeenCalled()
 
    it "should call each success callback if passed an array of strings and/or functions", ->
-     ThisNameBetterNotBeInUse.aasmEvent 'withArrayIncludingFunctions', {'success': ['successCallback1', 'successCallback2', (obj) -> obj.functionSuccessCallback() ]}, ()->
+     ThisNameBetterNotBeInUse.aasmEvent 'withArrayIncludingFunctions', {'success': ['successCallback1', 'successCallback2', () -> @functionSuccessCallback() ]}, ()->
        @transitions {'to': 'array', 'from': ['initial']}
      model = new ThisNameBetterNotBeInUse()
      spyOn(model, 'successCallback1').andCallThrough()
@@ -104,7 +104,7 @@ describe 'Event', ->
      expect(model.functionSuccessCallback).toHaveBeenCalled()
 
    it "should call the success callback if it's a function", ->
-     ThisNameBetterNotBeInUse.aasmEvent 'withFunction', {'success': (obj) -> obj.functionSuccessCallback()}, ()->
+     ThisNameBetterNotBeInUse.aasmEvent 'withFunction', {'success': () -> @functionSuccessCallback()}, ()->
        @transitions {'to': 'function', 'from': ['initial']}
      model = new ThisNameBetterNotBeInUse()
      spyOn(model, 'functionSuccessCallback').andCallThrough()

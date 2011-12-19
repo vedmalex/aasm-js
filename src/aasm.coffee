@@ -1,5 +1,7 @@
+{capitalize, _callAction} = require './helpers'
 StateMachine = require './state_machine'
 Event = require './event'
+
 
 module.exports = class AASM
 
@@ -12,12 +14,13 @@ module.exports = class AASM
         StateMachine[this].initialState = initialState
       else
         StateMachine[this].initialState
+
     # создает заданное состояние с опциями
     aasmState: (name, options={}) ->
       sm = StateMachine[this]
       sm.createState(name, options)
       sm.initialState = name unless sm.initialState
-      isMethod = "is#{name.substr(0,1).toUpperCase()}#{name.substr(1)}"
+      isMethod = "is#{capitalize(name)}"
       this.prototype[isMethod] = () ->  @aasmCurrentState() is name
     # создает event 
     aasmEvent: (name, options = {}, block) ->
@@ -94,9 +97,9 @@ module.exports = class AASM
         when 'string'
           state
         when 'function'
-          state.call(this, this)
-        else
-          throw {name: "NotImplementedError", message: "Unrecognized state-type given.  Expected String, or Function."}
+          state.call(this)
+        # else
+        #   throw {name: "NotImplementedError", message: "Unrecognized state-type given.  Expected String, or Function."}
 
     aasmStateObjectForState: (name)->
       obj = @constructor.aasmStates().filter (s) -> s.name is name

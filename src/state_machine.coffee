@@ -9,7 +9,7 @@ module.exports = class StateMachine extends Object
     sm = new StateMachine('')
     @machines[klass] = sm
     @[klass] = sm
-  
+
   ### конструктор машини состояний ###
   constructor: (name) ->
     @name = name
@@ -17,7 +17,7 @@ module.exports = class StateMachine extends Object
     @states = []
     @events = {}
     @config = {}
-  
+
   ### клонировать ###
   clone: () ->
     klone = merge(this, {})

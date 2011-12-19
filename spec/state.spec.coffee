@@ -23,7 +23,7 @@ describe 'State', ->
     expect(record.foo).toHaveBeenCalled()
 
   it 'should send a message to the record for each action', ->
-    state = new State('astate', {entering: ['a', 'b', 'c', (r) -> r.foobar()]})
+    state = new State('astate', {entering: ['a', 'b', 'c', () -> @foobar()]})
     record =
       a: ->
       b: ->
@@ -54,7 +54,7 @@ describe 'State', ->
     expect(record.c).not.toHaveBeenCalled()
 
   it 'should call a function, passing in the record for an action if the action is present', ->
-    state = new State('astate', {entering: (r) -> r.foobar()})
+    state = new State('astate', {entering: () -> @foobar()})
     record = foobar: ->
     spyOn(record, 'foobar')
     state.callAction('entering', record)
@@ -79,7 +79,7 @@ describe 'State', ->
       expect(record.error).toHaveBeenCalled()
 
     it 'should handleError for chain of methods (excepts:halt_aasm_chain), if method provided as method', ->
-      @some = (rec, error)-> rec.error(error)
+      @some = (error)-> @error(error)
       state = new State('astate', {entering: ['a', 'b', 'c'],onError:@some})
       record =
         a: ->
@@ -97,7 +97,7 @@ describe 'State', ->
       expect(record.error).toHaveBeenCalled()
 
     it 'should handleError for single method call of methods (excepts:halt_aasm_chain), if method provided as method', ->
-      @some = (rec, error)-> rec.error(error)
+      @some = (rec, error)-> @error(error)
       state = new State('astate', {entering: 'a',onError:@some})
       record =
         a: -> 
