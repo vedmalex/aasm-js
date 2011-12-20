@@ -4,53 +4,53 @@
 
 # Peek at the beginning of a given string to see if it matches a sequence.
 exports.starts = (string, literal, start) ->
-  literal is string.substr start, literal.length
+	literal is string.substr start, literal.length
 
 # Peek at the end of a given string to see if it matches a sequence.
 exports.ends = (string, literal, back) ->
-  len = literal.length
-  literal is string.substr string.length - len - (back or 0), len
+	len = literal.length
+	literal is string.substr string.length - len - (back or 0), len
 
 # Trim out all falsy values from an array.
 exports.compact = (array) ->
-  item for item in array when item
+	item for item in array when item
 
 # Count the number of occurrences of a string in a string.
 exports.count = (string, substr) ->
-  num = pos = 0
-  return 1/0 unless substr.length
-  num++ while pos = 1 + string.indexOf substr, pos
-  num
+	num = pos = 0
+	return 1/0 unless substr.length
+	num++ while pos = 1 + string.indexOf substr, pos
+	num
 
 # Merge objects, returning a fresh copy with attributes from both sides.
 # Used every time `Base#compile` is called, to allow properties in the
 # options hash to propagate down the tree without polluting other branches.
 exports.merge = (options, overrides) ->
-  extend (extend {}, options), overrides
+	extend (extend {}, options), overrides
 
 # Extend a source object with the properties of another object (shallow copy).
 extend = exports.extend = (object, properties) ->
-  for key, val of properties
-    object[key] = val
-  object
+	for key, val of properties
+		object[key] = val
+	object
 
 # Return a flattened version of an array.
 # Handy for getting a list of `children` from the nodes.
 exports.flatten = flatten = (array) ->
-  flattened = []
-  for element in array
-    if element instanceof Array
-      flattened = flattened.concat flatten element
-    else
-      flattened.push element
-  flattened
+	flattened = []
+	for element in array
+		if element instanceof Array
+			flattened = flattened.concat flatten element
+		else
+			flattened.push element
+	flattened
 
 # Delete a key from an object, returning the value. Useful when a node is
 # looking for a particular method in an options hash.
 exports.del = (obj, key) ->
-  val =  obj[key]
-  delete obj[key]
-  val
+	val =  obj[key]
+	delete obj[key]
+	val
 
 # Gets the last item of an array(-like) object.
 exports.last = (array, back) -> array[array.length - (back or 0) - 1]
@@ -65,7 +65,7 @@ exports.last = (array, back) -> array[array.length - (back or 0) - 1]
 *   'why hello there...'.capitalize() -> 'Why hello there...'
 ###
 capitalize = exports.capitalize = (str) ->
-  str.substr(0,1).toUpperCase() + str.substr(1).toLowerCase()
+	str.substr(0,1).toUpperCase() + str.substr(1).toLowerCase()
 
 ###
  * @method dasherize()
@@ -78,7 +78,7 @@ capitalize = exports.capitalize = (str) ->
  *
 ###
 dasherize = exports.dasherize = (string) ->
-  string.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/_/g, '-').toLowerCase()
+	string.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/_/g, '-').toLowerCase()
 
 ###
  * @method underscore()
@@ -92,7 +92,7 @@ dasherize = exports.dasherize = (string) ->
 ###
 
 exports.underscore = (string) ->
-  string.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/-/g, '_').toLowerCase()
+	string.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/-/g, '_').toLowerCase()
 
 ###
  * @method camelize([first] = true)
@@ -106,13 +106,13 @@ exports.underscore = (string) ->
  *
 ###
 exports.camelize = (string, first) ->
-  parts = dasherize(string).split('-')
-  text = for part, i in parts
-    if first is false and i is 0
-      part.toLowerCase()
-    else
-      part.substr(0, 1).toUpperCase() + part.substr(1).toLowerCase()
-  text.join('')
+	parts = dasherize(string).split('-')
+	text = for part, i in parts
+		if first is false and i is 0
+			part.toLowerCase()
+		else
+			part.substr(0, 1).toUpperCase() + part.substr(1).toLowerCase()
+	text.join('')
 
 ###
  * @method words([fn])
@@ -128,8 +128,8 @@ exports.camelize = (string, first) ->
 ###
 
 words = exports.words = (string, fn) ->
-  parts = string.trim().split(/\s+/)
-  if fn? then parts.map(fn) else parts
+	parts = string.trim().split(/\s+/)
+	if fn? then parts.map(fn) else parts
 
 
 ###
@@ -142,25 +142,25 @@ words = exports.words = (string, fn) ->
  *   'no way'.titleize()       -> 'No Way'
 ###
 exports.titleize = (string) ->
-  words(string, (s) -> capitalize(s)).join(' ')
+	words(string, (s) -> capitalize(s)).join(' ')
 
 # выполнить код действия
 
 _callAction = (action, thisArg, args...)->
-  #throw "No Action Specified" unless action
-  if Array.isArray(action)
-    _callAction(anAction, thisArg, args...) for anAction in action
-  else
-    switch typeof action
-      when 'string'
-        debugger
-        if thisArg[action]?
-          thisArg[action].call(thisArg, args...)
-        else
-          "No such method #{action}"
-      when 'function'
-        action.call(thisArg, args...)
-      else
-        "Unknow type #{action}"
+	#throw "No Action Specified" unless action
+	if Array.isArray(action)
+		_callAction(anAction, thisArg, args...) for anAction in action
+	else
+		switch typeof action
+			when 'string'
+				debugger
+				if thisArg[action]?
+					thisArg[action].call(thisArg, args...)
+				else
+					"No such method #{action}"
+			when 'function'
+				action.call(thisArg, args...)
+			else
+				"Unknow type #{action}"
 
 exports._callAction = _callAction

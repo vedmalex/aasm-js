@@ -5,152 +5,155 @@ Event = require './event'
 
 module.exports = class AASM
 
-  ClassMethods =
+	ClassMethods =
 
-    # setter/getter for initialState
-    aasmInitialState: (initialState) ->
-      #this refers to the class object here which is mixing in this module
-      if initialState
-        StateMachine[this].initialState = initialState
-      else
-        StateMachine[this].initialState
+		# setter/getter for initialState
+		aasmInitialState: (initialState) ->
+			#this refers to the class object here which is mixing in this module
+			if initialState
+				StateMachine[this].initialState = initialState
+			else
+				StateMachine[this].initialState
 
-    # создает заданное состояние с опциями
-    aasmState: (name, options={}) ->
-      sm = StateMachine[this]
-      sm.createState(name, options)
-      sm.initialState = name unless sm.initialState
-      isMethod = "is#{capitalize(name)}"
-      this.prototype[isMethod] = () ->  @aasmCurrentState() is name
-    # создает event 
-    aasmEvent: (name, options = {}, block) ->
-      if typeof options is 'function'
-        block = options
-        options = {}
-      sm = StateMachine[this]
-      unless sm.events[name]
-        sm.events[name] = new Event(name, options, block)
+		# создает заданное состояние с опциями
+		aasmState: (name, options={}) ->
+			sm = StateMachine[this]
+			sm.createState(name, options)
+			sm.initialState = name unless sm.initialState
+			isMethod = "is#{capitalize(name)}"
+			this.prototype[isMethod] = () ->  @aasmCurrentState() is name
+		# создает event 
+		aasmEvent: (name, options = {}, block) ->
+			if typeof options is 'function'
+				block = options
+				options = {}
+			sm = StateMachine[this]
+			unless sm.events[name]
+				sm.events[name] = new Event(name, options, block)
 
-      this.prototype[name]= (args...) ->
-        @aasmFireEvent(name, false, args...)
+			this.prototype[name]= (args...) ->
+				@aasmFireEvent(name, false, args...)
 
-      this.prototype["#{name}AndSave"]= (args...) ->
-        @aasmFireEvent(name, true, args...)
-
-
-    aasmStates:() -> StateMachine[this].states
-
-    aasmStatesName:() -> StateMachine[this].statesName()
-
-    aasmEvents:() -> StateMachine[this].events
-
-    aasmStatesForSelect:() ->
-      console.log(@aasmStates())
-      StateMachine[this].states.map (state) ->
-        console.log("..AAAAA....", state)
-        state.forSelect()
+			this.prototype["#{name}AndSave"]= (args...) ->
+				@aasmFireEvent(name, true, args...)
 
 
-  #Prototype methods
-  PrototypeMethods =
-    aasmCurrentState: () ->
-      return @_aasmCurrentState if @_aasmCurrentState
-      if @aasmReadState?
-        @_aasmCurrentState = @aasmReadState()
-      return @_aasmCurrentState if @_aasmCurrentState
-      @aasmEnterInitialState()
+		aasmStates:() -> StateMachine[this].states
 
-    aasmEnterInitialState: () ->
-      stateName = @aasmDetermineStateName(@constructor.aasmInitialState())
-      state = @aasmStateObjectForState(stateName)
+		aasmStatesName:() -> StateMachine[this].statesName()
 
-      state.callAction('beforeEnter', this)
-      state.callAction('enter', this)
-      @_aasmCurrentState = stateName
-      state.callAction('afterEnter', this)
-      stateName
+		aasmEvents:() -> StateMachine[this].events
 
-    aasmEventsForCurrentState: () ->
-      @aasmEventsForState(@aasmCurrentState())
+		aasmStatesForSelect:() ->
+			console.log(@aasmStates())
+			StateMachine[this].states.map (state) ->
+				console.log("..AAAAA....", state)
+				state.forSelect()
 
-    aasmEventsForState: (state) ->
-      values = (value for name, value of this.constructor.aasmEvents())
-      events = values.filter (event)-> event.isTransitionsFromState(state)
-      events.map (event) -> event.name
 
-  #   private
+	#Prototype methods
+	PrototypeMethods =
+		aasmCurrentState: () ->
+			return @_aasmCurrentState if @_aasmCurrentState
+			if @aasmReadState?
+				@_aasmCurrentState = @aasmReadState()
+			return @_aasmCurrentState if @_aasmCurrentState
+			@aasmEnterInitialState()
 
-    setAasmCurrentStateWithPersistence: (state) ->
-      saveSuccess = true
-      if @aasmWriteState?
-        saveSuccess = @aasmWriteState(state)
-      @_aasmCurrentState = state if saveSuccess
-      saveSuccess
+		aasmEnterInitialState: () ->
+			stateName = @aasmDetermineStateName(@constructor.aasmInitialState())
+			state = @aasmStateObjectForState(stateName)
 
-    setAasmCurrentState: (state)->
-      if @aasmWriteStateWithoutPersistence?
-        @aasmWriteStateWithoutPersistence(state)
-      @_aasmCurrentState = state
+			state.callAction('beforeEnter', this)
+			state.callAction('enter', this)
+			@_aasmCurrentState = stateName
+			state.callAction('afterEnter', this)
+			stateName
 
-    aasmDetermineStateName: (state)->
-      switch typeof state
-        when 'string'
-          state
-        when 'function'
-          state.call(this)
-        # else
-        #   throw {name: "NotImplementedError", message: "Unrecognized state-type given.  Expected String, or Function."}
+		aasmEventsForCurrentState: () ->
+			@aasmEventsForState(@aasmCurrentState())
 
-    aasmStateObjectForState: (name)->
-      obj = @constructor.aasmStates().filter (s) -> s.name is name
-      throw {name: "UndefinedState", message: "State :#{name} doesn't exist"} unless obj
-      obj[0]
+		aasmEventsForState: (state) ->
+			values = (value for name, value of this.constructor.aasmEvents())
+			events = values.filter (event)-> event.isTransitionsFromState(state)
+			events.map (event) -> event.name
+		
+	#    aasmWriteState: используется для того чтобы сохранять состояние где-то
+	#   aasmWriteStateWithoutPersistence - метод для сохрарения состояния объекта возвращает bool сохранение прошло успешно
 
-    aasmFireEvent: (name, persist, args...) ->
-      event = @constructor.aasmEvents()[name]
-      try
-        oldState = @aasmStateObjectForState(@aasmCurrentState())
-        oldState.callAction('exit', this)
+	#   private
 
-        # new event before callback
-        event.callAction('before', this)
-        newStateName = event.fire(this, args...)
+		setAasmCurrentStateWithPersistence: (state) ->
+			saveSuccess = true
+			if @aasmWriteState?
+				saveSuccess = @aasmWriteState(state)
+			@_aasmCurrentState = state if saveSuccess
+			saveSuccess
 
-        unless newStateName is null
-          newState = @aasmStateObjectForState(newStateName)
+		setAasmCurrentState: (state)->
+			if @aasmWriteStateWithoutPersistence?
+				@aasmWriteStateWithoutPersistence(state)
+			@_aasmCurrentState = state
 
-          # new before_ callbacks
-          oldState.callAction('beforeExit', this)
-          newState.callAction('beforeEnter', this)
+		aasmDetermineStateName: (state)->
+			switch typeof state
+				when 'string'
+					state
+				when 'function'
+					state.call(this)
+				# else
+				#   throw {name: "NotImplementedError", message: "Unrecognized state-type given.  Expected String, or Function."}
 
-          newState.callAction('enter', this)
+		aasmStateObjectForState: (name)->
+			obj = @constructor.aasmStates().filter (s) -> s.name is name
+			throw {name: "UndefinedState", message: "State :#{name} doesn't exist"} unless obj
+			obj[0]
 
-          persistSuccessful = true
-          if persist
-            persistSuccessful = @setAasmCurrentStateWithPersistence(newStateName)
-            event.executeSuccessCallback(this) if persistSuccessful
-          else
-            @setAasmCurrentState newStateName
+		aasmFireEvent: (name, persist, args...) ->
+			event = @constructor.aasmEvents()[name]
+			try
+				oldState = @aasmStateObjectForState(@aasmCurrentState())
+				oldState.callAction('exit', this)
 
-          if persistSuccessful
-            oldState.callAction('afterExit', this)
-            newState.callAction('afterEnter', this)
-            event.callAction('after', this)
-            @aasmEventFired(name, oldState.name, @aasmCurrentState()) if @aasmEventFired
-          else
-            @aasmEventFailed(name, oldState.name) if @aasmEventFailed
+				# new event before callback
+				event.callAction('before', this)
+				newStateName = event.fire(this, args...)
 
-          persistSuccessful
-        else
-          if @aasmEventFailed
-            @aasmEventFailed(name, oldState.name)
-          false
-      catch e
-        event.executeErrorCallback(this, e)
+				unless newStateName is null
+					newState = @aasmStateObjectForState(newStateName)
 
-  @include = (klass) ->
-    klass[name] = method for name, method of ClassMethods
-    klass.prototype[name] = method for name, method of PrototypeMethods
-    StateMachine.register(klass)
+					# new before_ callbacks
+					oldState.callAction('beforeExit', this)
+					newState.callAction('beforeEnter', this)
+
+					newState.callAction('enter', this)
+
+					persistSuccessful = true
+					if persist
+						persistSuccessful = @setAasmCurrentStateWithPersistence(newStateName)
+						event.executeSuccessCallback(this) if persistSuccessful
+					else
+						@setAasmCurrentState newStateName
+
+					if persistSuccessful
+						oldState.callAction('afterExit', this)
+						newState.callAction('afterEnter', this)
+						event.callAction('after', this)
+						@aasmEventFired(name, oldState.name, @aasmCurrentState()) if @aasmEventFired
+					else
+						@aasmEventFailed(name, oldState.name) if @aasmEventFailed
+
+					persistSuccessful
+				else
+					if @aasmEventFailed
+						@aasmEventFailed(name, oldState.name)
+					false
+			catch e
+				event.executeErrorCallback(this, e)
+	
+	@include = (klass) ->
+		klass[name] = method for name, method of ClassMethods
+		klass.prototype[name] = method for name, method of PrototypeMethods
+		StateMachine.register(klass)
 
 

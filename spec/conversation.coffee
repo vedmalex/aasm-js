@@ -1,28 +1,28 @@
 AASM = require '../lib/aasm'
 
 module.exports = class Conversation
-  AASM.include(this)
+	AASM.include(this)
 
-  @aasmInitialState 'needsAttention'
+	@aasmInitialState 'needsAttention'
 
-  @aasmState 'needsAttention'
-  @aasmState 'read'
-  @aasmState 'closed'
-  @aasmState 'awaitingResponse'
-  @aasmState 'junk'
+	@aasmState 'needsAttention'
+	@aasmState 'read'
+	@aasmState 'closed'
+	@aasmState 'awaitingResponse'
+	@aasmState 'junk'
 
-  @aasmEvent 'newMessage', ()->
+	@aasmEvent 'newMessage', ()->
 
-  @aasmEvent 'view', ()->
-    @transitions {to: 'read', from: ['needsAttention']}
+	@aasmEvent 'view', ()->
+		@transitions {to: 'read', from: ['needsAttention']}
 
-  @aasmEvent 'reply', ()->
+	@aasmEvent 'reply', ()->
 
-  @aasmEvent 'close', ()->
-    @transitions {to: 'closed', from: ['read', 'awaitingResponse']}
+	@aasmEvent 'close', ()->
+		@transitions {to: 'closed', from: ['read', 'awaitingResponse']}
 
-  @aasmEvent 'junk', ()->
-    @transitions {to: 'junk', from: ['read']}
+	@aasmEvent 'junk', ()->
+		@transitions {to: 'junk', from: ['read']}
 
-  @aasmEvent 'unjunk', ()->
+	@aasmEvent 'unjunk', ()->
 
